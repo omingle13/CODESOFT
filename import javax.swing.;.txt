@@ -1,0 +1,116 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Timer;
+import java.util.TimerTask;
+
+public class QuizApp {
+    private JFrame frame;
+    private JLabel questionLabel;
+    private JButton[] answerButtons;
+    private JLabel timerLabel;
+    private int timeRemaining = 30; // Timer for each question in seconds
+    private int currentQuestionIndex = 0;
+    private Timer countdownTimer;
+
+    private String[] questions = {
+        "What is the capital of France?",
+        "Which planet is known as the Red Planet?",
+        "Who wrote 'Romeo and Juliet'?",
+        "What is the largest ocean on Earth?"
+    };
+
+    private String[][] answers = {
+        {"Paris", "London", "Rome", "Berlin"},
+        {"Mars", "Earth", "Venus", "Jupiter"},
+        {"Shakespeare", "Dickens", "Hemingway", "Austen"},
+        {"Atlantic Ocean", "Pacific Ocean", "Indian Ocean", "Arctic Ocean"}
+    };
+
+    private String[] correctAnswers = {"Paris", "Mars", "Shakespeare", "Pacific Ocean"};
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new QuizApp().createAndShowGUI());
+    }
+
+    public void createAndShowGUI() {
+        frame = new JFrame("Quiz Application");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
+        frame.setLayout(new BorderLayout());
+
+        questionLabel = new JLabel("", JLabel.CENTER);
+        questionLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        frame.add(questionLabel, BorderLayout.NORTH);
+
+        JPanel answersPanel = new JPanel();
+        answersPanel.setLayout(new GridLayout(4, 1));
+        answerButtons = new JButton[4];
+        for (int i = 0; i < 4; i++) {
+            answerButtons[i] = new JButton();
+            answerButtons[i].addActionListener(new AnswerButtonListener());
+            answersPanel.add(answerButtons[i]);
+        }
+        frame.add(answersPanel, BorderLayout.CENTER);
+
+        timerLabel = new JLabel("Time Left: " + timeRemaining + "s", JLabel.CENTER);
+        timerLabel.setFont(new Font("Arial", Font.PLAIN, 20));
+        frame.add(timerLabel, BorderLayout.SOUTH);
+
+        showQuestion(currentQuestionIndex);
+        frame.setVisible(true);
+    }
+
+    public void showQuestion(int index) {
+        if (index < questions.length) {
+            questionLabel.setText(questions[index]);
+            for (int i = 0; i < 4; i++) {
+                answerButtons[i].setText(answers[index][i]);
+            }
+
+            // Reset and start the timer for each question
+            timeRemaining = 30;
+            timerLabel.setText("Time Left: " + timeRemaining + "s");
+
+            if (countdownTimer != null) {
+                countdownTimer.cancel();
+            }
+
+            countdownTimer = new Timer();
+            countdownTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if (timeRemaining > 0) {
+                        timeRemaining--;
+                        timerLabel.setText("Time Left: " + timeRemaining + "s");
+                    } else {
+                        JOptionPane.showMessageDialog(frame, "Time's up! Moving to next question.");
+                        nextQuestion();
+                    }
+                }
+            }, 0, 1000);
+        } else {
+            JOptionPane.showMessageDialog(frame, "Quiz Finished!");
+            System.exit(0);
+        }
+    }
+
+    public void nextQuestion() {
+        currentQuestionIndex++;
+        showQuestion(currentQuestionIndex);
+    }
+
+    class AnswerButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JButton source = (JButton) e.getSource();
+            String selectedAnswer = source.getText();
+            if (selectedAnswer.equals(correctAnswers[currentQuestionIndex])) {
+                JOptionPane.showMessageDialog(frame, "Correct!");
+            } else {
+                JOptionPane.showMessageDialog(frame, "Incorrect! Correct answer: " + correctAnswers[currentQuestionIndex]);
+            }
+            nextQuestion();
+        }
+    }
+}
